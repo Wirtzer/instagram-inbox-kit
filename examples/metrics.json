@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-07-17T01:43:08Z",
+  "total_items_classified": 10,
+  "total_corrections": 3,
+  "correction_rate": 0.3,
+  "by_transition": {
+    "Other \u2192 Career": 1,
+    "Other \u2192 Research": 1,
+    "Other \u2192 AI Ideas": 1
+  },
+  "most_corrected_from": {
+    "Other": 3
+  },
+  "rate_over_time": [
+    {
+      "month": "2026-05",
+      "items": 10,
+      "corrections": 1,
+      "rate": 0.1
+    },
+    {
+      "month": "2026-06",
+      "items": 0,
+      "corrections": 2,
+      "rate": null
+    }
+  ],
+  "learned": "3 correction(s) captured and being used as classifier hints. Most common fix: Other \u2192 Career (1\u00d7)."
+}

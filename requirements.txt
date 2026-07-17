@@ -1,0 +1,10 @@
+# Runtime dependencies for instagram-inbox-kit.
+# Install with:  pip install -r requirements.txt   (or: pip install -e .)
+instagrapi>=2.1
+pillow>=10.0
+numpy>=1.26
+openpyxl>=3.1
+python-dotenv>=1.0
+
+# Test-only (safe to install everywhere):
+pytest>=7.0

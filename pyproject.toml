@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ig-inbox-kit"
+version = "1.0.0"
+description = "Ingest Instagram DMs shared to a dedicated bot account, interpret each reel/post, classify + extract the actionable content with one LLM call, and emit a categorized Excel workbook + markdown lists."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "instagram-inbox-kit contributors" }]
+keywords = ["instagram", "instagrapi", "ocr", "deepgram", "llm", "knowledge-base"]
+
+dependencies = [
+    "instagrapi>=2.1",
+    "pillow>=10.0",
+    "numpy>=1.26",
+    "openpyxl>=3.1",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+ig-inbox = "ig_inbox.run:main"
+ig-inbox-setup = "ig_inbox.setup_cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ig_inbox = ["ocr.swift"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

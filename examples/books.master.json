@@ -1,0 +1,29 @@
+{
+  "thelonghorizon": {
+    "title": "The Long Horizon",
+    "author": "A. Marsh",
+    "sources": ["https://www.instagram.com/p/SAMPLE0003/"],
+    "recommenders": [{"handle": "shelf_help", "why": "best beginner first-contact story"}],
+    "genre": "Science fiction",
+    "about": "A first-contact epic following a generation ship that intercepts an unexplained signal.",
+    "rating": "4.21"
+  },
+  "signaldrift": {
+    "title": "Signal Drift",
+    "author": "R. Okafor",
+    "sources": ["https://www.instagram.com/p/SAMPLE0003/"],
+    "recommenders": [{"handle": "shelf_help", "why": "for people who love time-loop puzzles"}],
+    "genre": "Science fiction / mystery",
+    "about": "A time-loop mystery where a researcher relives the same 12 hours to prevent a station failure.",
+    "rating": "4.05"
+  },
+  "embercourt": {
+    "title": "Ember Court",
+    "author": "L. Vance",
+    "sources": ["https://www.instagram.com/p/SAMPLE0003/"],
+    "recommenders": [{"handle": "shelf_help", "why": "her all-time favorite space opera"}],
+    "genre": "Space opera",
+    "about": "A political space opera about rival houses vying for control of a dying star's last resources.",
+    "rating": "4.38"
+  }
+}

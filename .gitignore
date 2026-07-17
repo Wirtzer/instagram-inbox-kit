@@ -1,0 +1,40 @@
+# --- secrets & credentials (NEVER commit) ---
+.env
+*.env
+!.env.example
+credentials/
+*session*.json
+*sessionid*
+instagram-session.json
+
+# --- runtime data (local, per-install) ---
+/data/
+/state/
+/logs/
+data/media/
+*.lock
+*.lock.d/
+
+# The synthetic sample data under examples/ IS committed on purpose;
+# the /data/ rule above only ignores the live runtime data dir at the repo root.
+
+# --- python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+venv/
+.venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- compiled OCR binary (built locally by setup) ---
+bin/
+src/ig_inbox/bin/
+
+# --- os ---
+.DS_Store

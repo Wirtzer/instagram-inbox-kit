@@ -1,0 +1,19 @@
+{
+  "ig_username": "your_bot_account",
+
+  "allowed_sender_usernames": ["your_personal_account"],
+  "allowed_sender_pks": [],
+
+  "thread_amount": 10,
+  "thread_message_limit": 20,
+
+  "max_frames": 40,
+  "frame_changed_pct": 1.0,
+  "min_transcript_words": 10,
+  "volume_gate_db": -50.0,
+
+  "ack_max_chars": 400,
+  "max_item_attempts": 3,
+
+  "known_games": { "palworld": "Palworld", "crimson desert": "Crimson Desert" }
+}
