@@ -107,6 +107,7 @@ pip install -e .
 cp .env.example .env            # fill in an LLM key (+ Deepgram if you want speech)
 cp config.example.json config.json   # set your bot handle + your own handle
 
+python -m ig_inbox.doctor       # capability check — resolve any ❌ first
 python -m ig_inbox.setup_cli    # builds OCR (macOS), then interactive IG login
 python -m ig_inbox.pipeline --dry-run   # see what it would process
 python -m ig_inbox.run          # do one real poll → workbook

@@ -22,10 +22,14 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0"]
+# On-device transcription (no Deepgram account). Needs a reasonably capable
+# machine — install with:  pip install "ig-inbox-kit[whisper]"
+whisper = ["faster-whisper>=1.0"]
 
 [project.scripts]
 ig-inbox = "ig_inbox.run:main"
 ig-inbox-setup = "ig_inbox.setup_cli:main"
+ig-inbox-doctor = "ig_inbox.doctor:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

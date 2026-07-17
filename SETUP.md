@@ -38,13 +38,26 @@ account**. That's the capture gesture.
 A small, cheap model is plenty — the default is `claude-haiku-4-5` /
 `gpt-4o-mini`. One item costs on the order of ~1–2K tokens.
 
-### Deepgram key (optional — for spoken audio)
+### How do you want spoken audio handled? (pick one)
 
-Get a key at [deepgram.com](https://deepgram.com) and set `DEEPGRAM_API_KEY`.
-Without it, reels with speech are still captured — you just lose the spoken
-transcript; captions and on-screen text are unaffected. Deepgram bills ~pennies
-per reel and the kit caches every transcript so it never pays twice for the same
-audio.
+Some reels put the useful info only in the voiceover. Three ways to turn that
+into text — set `TRANSCRIBE_BACKEND` in `.env`:
+
+| Option | `TRANSCRIBE_BACKEND` | What you need | Trade-off |
+|---|---|---|---|
+| **Deepgram** (recommended) | `deepgram` (or `auto` + a key) | A free account at [deepgram.com](https://deepgram.com) → set `DEEPGRAM_API_KEY` | Fast; works on any computer. Free credits are generous and last a long time. Audio is sent to Deepgram. Caches every transcript so it never pays twice. |
+| **On-device Whisper** | `whisper` | `pip install "ig-inbox-kit[whisper]"` | No account, fully private (audio never leaves your machine) — **but needs a reasonably powerful computer**. Slower. |
+| **Skip audio** | `none` | nothing | Captions + on-screen text still capture most posts. |
+
+**Not sure if your machine can run Whisper?** After installing (Step 4), run
+`python -m ig_inbox.doctor` — it reports your CPU/RAM and whether on-device
+Whisper looks viable, and it steers you to Deepgram if the machine's marginal.
+Default (`auto`) uses Deepgram if a key is set, otherwise skips audio.
+
+> **Model note:** the classifier + research calls default to `claude-haiku-4-5`
+> — a small, **cost-efficient** model. Bump `LLM_MODEL` to Sonnet or gpt-4o for
+> higher quality at higher cost. This runs on its own API key; it does not depend
+> on any Claude app you may or may not have on your phone.
 
 ---
 

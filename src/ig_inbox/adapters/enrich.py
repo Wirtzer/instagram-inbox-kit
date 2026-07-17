@@ -3,10 +3,14 @@
 plain classify call does not.
 
 Backends (ENRICH_BACKEND):
-  none           — disabled (default). Restaurants/books keep only the facts the
-                   post itself stated. The kit is fully functional this way.
-  anthropic_web  — Anthropic Messages API with the built-in web_search tool.
-                   Requires ANTHROPIC_API_KEY and web access on the account.
+  auto           — DEFAULT. Uses anthropic_web when an ANTHROPIC_API_KEY is
+                   present (so restaurants/places get looked up out of the box,
+                   like the reference system); otherwise off. This makes ONE
+                   extra web-search LLM call per enrichable item — a bit of extra
+                   cost for real address/hours/rating. Set `none` to disable.
+  none           — disabled. Restaurants/places keep only the facts the post
+                   itself stated. The kit is fully functional this way.
+  anthropic_web  — force the Anthropic web_search path (needs ANTHROPIC_API_KEY).
 
 To use a different research provider (an agent with a browser, a search API,
 your own tool), replace `_web_json()` — everything else keys off it.
@@ -25,15 +29,21 @@ import urllib.request
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 
 
+def _resolved_backend() -> str:
+    b = (os.environ.get("ENRICH_BACKEND") or "auto").strip().lower()
+    if b == "auto":
+        return "anthropic_web" if os.environ.get("ANTHROPIC_API_KEY") else "none"
+    return b
+
+
 def enabled() -> bool:
-    return (os.environ.get("ENRICH_BACKEND") or "none").strip().lower() != "none"
+    return _resolved_backend() != "none"
 
 
 def _web_json(prompt: str, max_tokens: int = 1200, timeout: int = 220):
     """Ask a web-capable model and parse the first JSON value in its reply.
     Returns the parsed object/array, or None."""
-    backend = (os.environ.get("ENRICH_BACKEND") or "none").strip().lower()
-    if backend != "anthropic_web":
+    if _resolved_backend() != "anthropic_web":
         return None
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:

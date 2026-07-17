@@ -84,6 +84,23 @@ TESSERACT = _tool("TESSERACT_BIN", "tesseract")
 
 ALLOWED_MEDIA_HOSTS = ("instagram.com", "cdninstagram.com", "fbcdn.net")
 
+# --- transcription backend (how spoken audio in reels is turned into text) ---
+# TRANSCRIBE_BACKEND: auto | deepgram | whisper | none
+#   auto     → Deepgram if DEEPGRAM_API_KEY is set, else 'none' (audio skipped).
+#              (whisper is opt-in, never auto-selected — it needs a capable machine.)
+#   deepgram → cloud, fast, needs a (free-tier) Deepgram key. Audio leaves the machine.
+#   whisper  → on-device (faster-whisper), private + no account, but wants a decent CPU/GPU.
+#   none     → don't transcribe; captions + on-screen text still carry the post.
+TRANSCRIBE_BACKEND = os.environ.get("TRANSCRIBE_BACKEND", "auto").strip().lower()
+
+
+def resolve_transcribe_backend() -> str:
+    """Turn 'auto' into a concrete backend based on what's configured."""
+    b = TRANSCRIBE_BACKEND
+    if b in ("deepgram", "whisper", "none"):
+        return b
+    return "deepgram" if os.environ.get("DEEPGRAM_API_KEY") else "none"
+
 # --- category taxonomy (ADAPTIVE — grows from THIS user's content) ----------
 # The taxonomy is NOT a fixed list. It starts from a small generic SEED (plus
 # anything the user pre-seeds in config `categories`), and the classifier COINS
@@ -208,6 +225,11 @@ DEFAULT_CONFIG: dict[str, Any] = {
     # classifier coin new categories when nothing fits (recommended).
     "categories": [],
     "discover_categories": True,
+    # Categories that get the online due-diligence lookup (address/hours/rating)
+    # when enrichment is enabled — physical places, like the reference system.
+    # Recipes are "enriched" at extraction time (complete ingredients+steps), so
+    # they don't need a web lookup here.
+    "enrich_categories": ["restaurant", "place", "travel"],
     "thread_amount": 10,
     "thread_message_limit": 20,
     "max_frames": 40,

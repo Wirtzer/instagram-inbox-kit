@@ -22,8 +22,14 @@ def enrich_records(records: list[dict[str, Any]], max_per_run: int = 12,
     progress survives interruption. Returns count enriched."""
     if not enrich.enabled():
         return 0
+    # Which categories get the online due-diligence lookup (address/hours/rating).
+    # Restaurants + physical places/travel by default — configurable + adaptive:
+    # any user category containing 'restaurant'/'place'/'travel'/'bar'/'cafe' etc.
+    from . import config
+    want = set(config.load_config().get("enrich_categories")
+               or ["restaurant", "place", "travel"])
     pending = [r for r in records
-               if r.get("category") == "restaurant" and "enrichment" not in r
+               if r.get("category") in want and "enrichment" not in r
                and (r.get("title") or (r.get("details") or {}).get("name"))]
     enriched = 0
     for r in pending[:max_per_run]:

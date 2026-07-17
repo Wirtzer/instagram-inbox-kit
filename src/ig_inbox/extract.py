@@ -39,7 +39,11 @@ def mean_volume_db(video: Path) -> float | None:
 
 
 def transcribe(video: Path, workdir: Path, min_words: int, volume_gate_db: float) -> str:
-    """Speech transcript, or '' when there is no meaningful speech."""
+    """Speech transcript, or '' when there is no meaningful speech. Routes to the
+    configured backend (Deepgram cloud, on-device Whisper, or none)."""
+    backend = config.resolve_transcribe_backend()
+    if backend == "none":
+        return ""
     if not has_audio_stream(video):
         return ""
     vol = mean_volume_db(video)
@@ -54,7 +58,11 @@ def transcribe(video: Path, workdir: Path, min_words: int, volume_gate_db: float
             print(f"WARN: audio extraction failed: {p.stderr[-300:]}", file=sys.stderr)
             return ""
 
-    transcript = deepgram.transcribe(audio, workdir / "deepgram.json").strip()
+    if backend == "whisper":
+        from . import whisper
+        transcript = whisper.transcribe(audio, workdir / "whisper.json").strip()
+    else:  # deepgram
+        transcript = deepgram.transcribe(audio, workdir / "deepgram.json").strip()
     if len(transcript.split()) < min_words:
         return ""  # music-only / negligible speech
     return transcript

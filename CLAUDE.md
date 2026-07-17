@@ -71,8 +71,16 @@ only the 2–3 that truly matter.** Do not interrogate.
 > 3. **An LLM API key** — either an Anthropic key (`sk-ant-…`) or an
 >    OpenAI-compatible base URL + key. Which do you have?
 >
-> Optional: a **Deepgram key** for transcribing spoken audio in reels. Without
-> it I'll still read captions and on-screen text — want to add it?
+> **How do you want spoken audio handled?** Some reels carry info only in the
+> voiceover. Three ways (pick one):
+> - **Deepgram** (recommended for most) — a free account at deepgram.com gives
+>   generous free credits that last a long time; works on any computer.
+> - **On-device Whisper** — no account, fully private, but needs a reasonably
+>   powerful computer. (I can check yours — run the doctor.)
+> - **Skip it** — captions + on-screen text still capture most posts.
+>
+> If they pick Whisper, run `python -m ig_inbox.doctor` first — it estimates
+> whether this machine is strong enough; if it's marginal, steer them to Deepgram.
 
 **Categories are adaptive — don't ask unless useful.** The tabs are NOT a fixed
 list; they grow from what this user actually sends (the classifier coins a new
@@ -89,8 +97,8 @@ empty is completely fine (discovery handles it).
 | **Bot IG account** (`ig_username` + its login) | **REQUIRED — no default** | User creates a dedicated IG account (see `SETUP.md` §1); login happens interactively in setup | — (must ask) |
 | **Trigger handles** (`allowed_sender_usernames` = a **list**: everyone allowed to feed it) | **REQUIRED — no default; ≥1** | The user's own @handle, plus anyone else they want to trigger it; each resolved to a numeric PK at login. Shares from anyone NOT listed are ignored — this is the security boundary. | — (must ask) |
 | **LLM key** (`ANTHROPIC_API_KEY`, or `LLM_BASE_URL`+`LLM_API_KEY`) | **REQUIRED — no default** | Anthropic console, or any OpenAI-compatible endpoint | — (must ask) |
-| **LLM backend / model** (`LLM_BACKEND`, `LLM_MODEL`) | optional | — | `anthropic` / `claude-haiku-4-5` (or `openai` / `gpt-4o-mini`) |
-| **Deepgram key** (`DEEPGRAM_API_KEY`) | optional | deepgram.com | unset → **transcription skipped**, kit degrades to caption + OCR |
+| **LLM backend / model** (`LLM_BACKEND`, `LLM_MODEL`) | optional | — | `anthropic` / `claude-haiku-4-5` — deliberately a small, **cost-efficient** model (this handles both classification AND the research/enrichment calls). Bump to a stronger model (Sonnet, gpt-4o) for higher quality at higher cost; the user chooses. Do NOT assume the user has any particular Claude setup — this runs on its own API key. |
+| **Audio backend** (`TRANSCRIBE_BACKEND` + `DEEPGRAM_API_KEY`) | optional | Deepgram: free key at deepgram.com (free credits last a long time). Whisper: `pip install "ig-inbox-kit[whisper]"` (needs a capable machine). | `auto` → Deepgram if a key is set, else transcription **skipped** (captions + on-screen text still work). Ask the audio question above. |
 | **Output folder** (the Excel + lists location) | optional | — | `./data/lists/` (under the repo). Set `IG_INBOX_DATA_DIR` to relocate |
 | **OCR backend** (`OCR_BACKEND`) | optional | macOS: built by setup; Linux: `apt/brew install tesseract` | `auto` (Vision on macOS, else Tesseract, else off) |
 | **Web enrichment** (`ENRICH_BACKEND`) | optional | needs a web-capable LLM | `none` (restaurants/books keep post-only facts) |
@@ -104,18 +112,36 @@ The same required-vs-optional split is annotated in `.env.example` and
 
 ---
 
-## Prerequisites (verify, install if missing)
+## Prerequisites — RUN THE DOCTOR FIRST (don't assume anything is set up)
+
+Make NO assumptions about the host. After `pip install -e .`, the very first
+thing you do is run the capability check and **resolve every ❌ before the first
+real run**:
 
 ```bash
-python3 --version          # need 3.10+
-ffmpeg -version | head -1   # need ffmpeg + ffprobe (brew/apt install ffmpeg)
+python -m ig_inbox.doctor          # human report
+python -m ig_inbox.doctor --json   # machine-readable — parse this and act
 ```
 
+It checks: Python 3.10+, ffmpeg/ffprobe, the LLM key, the OCR path (Vision vs
+Tesseract vs off), the transcription backend (incl. whether THIS machine looks
+strong enough for on-device Whisper), a writable output folder, the bot account,
+the trigger allow-list, and whether Instagram is logged in. Each item that isn't
+`ok` carries a one-line fix.
+
+**Your job on a ❌ or ⚠️:**
+- **Auto-fix what you can** without bothering the user: install ffmpeg
+  (`brew/apt install ffmpeg`), install Tesseract on Linux, build the macOS OCR
+  binary (run setup), `pip install "ig-inbox-kit[whisper]"` if they chose Whisper.
+- **Only ask the user** for things a machine can't produce: accounts and keys
+  (the bot IG account, the LLM key, a Deepgram key), and the audio choice.
+- Re-run the doctor until it says **✅ Ready to run**. Never proceed with a ❌.
+
+Reference:
 - **Python 3.10+**, **ffmpeg/ffprobe** on PATH — required.
 - **macOS**: OCR uses the built-in Vision framework (setup compiles a tiny Swift
   CLI; needs Xcode command-line tools: `xcode-select --install`).
-- **Linux**: install Tesseract for OCR (`apt install tesseract-ocr`) — the kit
-  auto-detects it. Everything else is identical.
+- **Linux**: install Tesseract for OCR (`apt install tesseract-ocr`).
 
 ---
 
