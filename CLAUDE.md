@@ -38,12 +38,20 @@ only the 2–3 that truly matter.** Do not interrogate.
 
 3. **Ask only for genuinely-missing REQUIRED inputs — in ONE short batch.** The
    only inputs with **no default** are the ones a stranger can't guess: the bot
-   Instagram account, the user's own Instagram handle (the whitelisted sender),
-   and an LLM key. If any of those can't be found in step 1, ask for *all* the
-   missing ones at once (2–3 questions max), each framed plainly with what it's
-   for and an example value. Deepgram is a *soft* ask: mention that without it,
-   spoken audio is skipped (captions + on-screen text still work) — offer it, but
-   don't block on it.
+   Instagram account, the **trigger handles** (see below), and an LLM key. If any
+   of those can't be found in step 1, ask for *all* the missing ones at once
+   (2–3 questions max), each framed plainly with what it's for and an example
+   value. Deepgram is a *soft* ask: mention that without it, spoken audio is
+   skipped (captions + on-screen text still work) — offer it, but don't block on it.
+
+   **Trigger handles = the security boundary.** The kit ONLY processes shares
+   from an explicit allow-list of Instagram handles (`allowed_sender_usernames`,
+   a **list**). A share from anyone else is ignored — so a random DM can never
+   inject into the sheet. When asking, ask for **everyone the user wants to be
+   able to trigger it**, not just themselves: "Whose Instagram shares should this
+   act on? Usually just your own handle — but list anyone you want to be able to
+   feed it (a partner, a teammate)." Accept one or more; write them all to
+   `allowed_sender_usernames`. At least one is required.
 
 4. **If nothing required is missing → ask nothing. Proceed.**
 
@@ -57,8 +65,9 @@ only the 2–3 that truly matter.** Do not interrogate.
 > I need three things to wire this up:
 > 1. **The bot Instagram account** it should log in as — the throwaway account
 >    you'll share reels to (e.g. `my_saves_bot`). Not your personal account.
-> 2. **Your own Instagram handle** — so only *your* shares get processed
->    (e.g. `jane_doe`).
+> 2. **Whose shares should trigger this?** — the handle(s) allowed to feed it.
+>    Usually just your own (e.g. `jane_doe`), but list anyone you want to be able
+>    to trigger it (a partner, a teammate). Anyone not on the list is ignored.
 > 3. **An LLM API key** — either an Anthropic key (`sk-ant-…`) or an
 >    OpenAI-compatible base URL + key. Which do you have?
 >
@@ -70,7 +79,7 @@ only the 2–3 that truly matter.** Do not interrogate.
 | Input | Required? | How to get it | Sensible default |
 |---|---|---|---|
 | **Bot IG account** (`ig_username` + its login) | **REQUIRED — no default** | User creates a dedicated IG account (see `SETUP.md` §1); login happens interactively in setup | — (must ask) |
-| **Whitelisted sender** (`allowed_sender_usernames` = the user's own IG handle) | **REQUIRED — no default** | The user's personal IG @handle; resolved to a numeric PK at login | — (must ask) |
+| **Trigger handles** (`allowed_sender_usernames` = a **list**: everyone allowed to feed it) | **REQUIRED — no default; ≥1** | The user's own @handle, plus anyone else they want to trigger it; each resolved to a numeric PK at login. Shares from anyone NOT listed are ignored — this is the security boundary. | — (must ask) |
 | **LLM key** (`ANTHROPIC_API_KEY`, or `LLM_BASE_URL`+`LLM_API_KEY`) | **REQUIRED — no default** | Anthropic console, or any OpenAI-compatible endpoint | — (must ask) |
 | **LLM backend / model** (`LLM_BACKEND`, `LLM_MODEL`) | optional | — | `anthropic` / `claude-haiku-4-5` (or `openai` / `gpt-4o-mini`) |
 | **Deepgram key** (`DEEPGRAM_API_KEY`) | optional | deepgram.com | unset → **transcription skipped**, kit degrades to caption + OCR |

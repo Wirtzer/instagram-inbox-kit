@@ -1,6 +1,7 @@
 {
   "ig_username": "your_bot_account",
 
+  "_note_allowed_senders": "SECURITY BOUNDARY. Only shares from these handles are ever processed; anyone else is ignored. List everyone allowed to trigger it — usually just your own handle, but add a partner/teammate if you want them to feed it too. At least one required.",
   "allowed_sender_usernames": ["your_personal_account"],
   "allowed_sender_pks": [],
 
