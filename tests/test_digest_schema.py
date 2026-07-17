@@ -3,7 +3,7 @@ the LLM is unavailable. The LLM call is mocked — no network, no keys."""
 
 import json
 
-from ig_inbox import digest
+from ig_inbox import digest, config
 from ig_inbox.adapters import llm
 
 
@@ -26,7 +26,7 @@ def test_valid_response_parses(monkeypatch):
     out = digest.digest("caption", "transcript", "ocr")
     assert REQUIRED_KEYS <= set(out)
     assert out["category"] == "recipe"
-    assert out["category"] in digest.CATEGORIES
+    assert isinstance(out["category"], str) and out["category"] == out["category"].lower() and out["category"]
     assert isinstance(out["key_points"], list) and out["key_points"]
     assert set(out["entities"]) == digest.ENTITY_KEYS
     assert 0.0 <= out["confidence"] <= 1.0
@@ -39,9 +39,20 @@ def test_response_wrapped_in_prose_still_parses(monkeypatch):
     assert out["category"] == "recipe"
 
 
-def test_bad_category_is_rejected_then_degrades(monkeypatch):
-    bad = json.dumps({"category": "not_a_real_category", "summary": "x"})
-    monkeypatch.setattr(llm, "complete", lambda *a, **k: bad)
+def test_novel_category_is_coined_not_rejected(monkeypatch, tmp_path):
+    # Adaptive taxonomy: a category the author never used is COINED, not dumped
+    # into 'other'. (An empty/missing category still degrades — see below.)
+    monkeypatch.setattr(config, "TAXONOMY_FILE", tmp_path / "taxonomy.json")
+    novel = json.dumps({"category": "Woodworking", "summary": "x"})
+    monkeypatch.setattr(llm, "complete", lambda *a, **k: novel)
+    out = digest.digest("c", "t", "o")
+    assert out["category"] == "woodworking"          # coined + normalized
+    assert not out.get("degraded")
+    assert "woodworking" in config.load_categories()  # persisted for next time
+
+
+def test_empty_category_degrades(monkeypatch):
+    monkeypatch.setattr(llm, "complete", lambda *a, **k: json.dumps({"category": "", "summary": "x"}))
     out = digest.digest("c", "t", "o")
     assert out["category"] == "other"
     assert out.get("degraded") is True

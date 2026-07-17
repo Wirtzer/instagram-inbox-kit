@@ -23,11 +23,12 @@ def _seed(tmp_path):
     return recs
 
 
-def test_resolve_category_accepts_labels_and_keys():
-    assert config.resolve_category("Career") == "career"
-    assert config.resolve_category("AI Ideas") == "ai_idea"
-    assert config.resolve_category("career") == "career"
-    assert config.resolve_category("nonsense") is None
+def test_resolve_category_matches_keys_labels_and_coins(monkeypatch, tmp_path):
+    monkeypatch.setattr(config, "TAXONOMY_FILE", tmp_path / "tax.json")
+    assert config.resolve_category("recipe") == "recipe"        # seed key
+    assert config.resolve_category("Recipes") == "recipe"       # pretty label → key
+    assert config.resolve_category("Woodworking") == "woodworking"  # coins a new one
+    assert config.resolve_category("") is None                  # empty → nothing
 
 
 def test_inbox_correction_logs_pins_and_learns(tmp_path):

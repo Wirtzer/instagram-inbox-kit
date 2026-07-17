@@ -74,6 +74,14 @@ only the 2–3 that truly matter.** Do not interrogate.
 > Optional: a **Deepgram key** for transcribing spoken audio in reels. Without
 > it I'll still read captions and on-screen text — want to add it?
 
+**Categories are adaptive — don't ask unless useful.** The tabs are NOT a fixed
+list; they grow from what this user actually sends (the classifier coins a new
+category when nothing fits, and it persists). So do NOT impose the author's
+categories. You *may* optionally ask, in one line, "any topics you already know
+you save a lot of? (e.g. woodworking, crypto) — or skip and it'll learn your
+categories from your posts." Write any answer to config `categories`; leaving it
+empty is completely fine (discovery handles it).
+
 ### Input table (decide mechanically what's missing vs defaulted)
 
 | Input | Required? | How to get it | Sensible default |

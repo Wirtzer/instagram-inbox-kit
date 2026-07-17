@@ -84,54 +84,130 @@ TESSERACT = _tool("TESSERACT_BIN", "tesseract")
 
 ALLOWED_MEDIA_HOSTS = ("instagram.com", "cdninstagram.com", "fbcdn.net")
 
-# --- category taxonomy (shared by digest, feedback, workbook) ---------------
-CATEGORIES = frozenset({
-    "recipe", "restaurant", "movie", "game", "book", "random_food", "place",
-    "product", "finance", "ai_idea", "research", "self_improvement",
-    "relationships", "career", "news", "other",
-})
-
-# Human-facing sheet/label ↔ category key (so a user can type "AI Ideas" or
-# "Career" into the workbook's correction column and we resolve it).
-CATEGORY_SHEET = {
-    "recipe": "Recipes", "restaurant": "Restaurants", "movie": "Movies & TV",
-    "game": "Games", "book": "Books", "random_food": "Random Food",
-    "place": "Places", "product": "Products", "finance": "Finance",
-    "ai_idea": "AI Ideas", "research": "Research",
-    "self_improvement": "Self-Improvement", "relationships": "Relationships",
-    "career": "Career", "news": "News", "other": "Other",
+# --- category taxonomy (ADAPTIVE — grows from THIS user's content) ----------
+# The taxonomy is NOT a fixed list. It starts from a small generic SEED (plus
+# anything the user pre-seeds in config `categories`), and the classifier COINS
+# new categories when a post doesn't fit — those get registered and persist in
+# data/taxonomy.json. So the tabs reflect what *this* user actually saves, not
+# whatever the kit's author happened to save. See `discover_categories` config.
+SEED_CATEGORIES = [
+    "recipe", "restaurant", "travel", "product", "finance",
+    "book", "movie", "fitness", "home", "tech", "other",
+]
+# Pretty display names for known keys; unknown keys are title-cased on the fly.
+_PRETTY = {
+    "recipe": "Recipes", "restaurant": "Restaurants", "travel": "Travel",
+    "product": "Products", "finance": "Finance", "book": "Books",
+    "movie": "Movies & TV", "fitness": "Fitness", "home": "Home & DIY",
+    "tech": "Tech", "ai_idea": "AI Ideas", "other": "Other",
 }
-
-# corrections/metrics artifacts
 CORRECTIONS_FILE = DATA_DIR / "corrections.jsonl"
 CORRECTIONS_INBOX = DATA_DIR / "corrections.inbox.jsonl"
 METRICS_FILE = DATA_DIR / "metrics.json"
+TAXONOMY_FILE = DATA_DIR / "taxonomy.json"
+
+
+def normalize_category(text: str) -> str:
+    """A label → a canonical key: lowercase snake_case, alnum only. '' → ''."""
+    import re
+    t = (text or "").strip().lower()
+    t = t.replace("&", " and ")
+    t = re.sub(r"[^a-z0-9]+", "_", t).strip("_")
+    return t[:40]
+
+
+def _seed_taxonomy() -> list[str]:
+    """SEED + any user-configured `categories`, deduped, 'other' last."""
+    try:
+        user = load_config().get("categories") or []
+    except Exception:
+        user = []
+    keys, seen = [], set()
+    for c in list(SEED_CATEGORIES) + [normalize_category(x) for x in user]:
+        k = normalize_category(c) if c != "other" else "other"
+        if k and k not in seen:
+            seen.add(k); keys.append(k)
+    if "other" in keys:  # keep 'other' last
+        keys = [k for k in keys if k != "other"] + ["other"]
+    return keys
+
+
+def load_categories() -> list[str]:
+    """The user's LIVE taxonomy (seeded on first use, grows via register)."""
+    import json
+    if TAXONOMY_FILE.exists():
+        try:
+            cats = json.loads(TAXONOMY_FILE.read_text())
+            if isinstance(cats, list) and cats:
+                return cats
+        except Exception:
+            pass
+    cats = _seed_taxonomy()
+    save_categories(cats)
+    return cats
+
+
+def save_categories(cats: list[str]) -> None:
+    import json
+    TAXONOMY_FILE.parent.mkdir(parents=True, exist_ok=True)
+    tmp = TAXONOMY_FILE.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(cats, ensure_ascii=True))
+    tmp.rename(TAXONOMY_FILE)
+
+
+def register_category(label: str) -> str:
+    """Canonicalize `label`; if it's a genuinely new category, add it to the
+    live taxonomy (unless discovery is disabled). Returns the canonical key."""
+    key = normalize_category(label)
+    if not key:
+        return "other"
+    cats = load_categories()
+    if key in cats:
+        return key
+    # discovery gate: if off, unknown → 'other'
+    try:
+        if not load_config().get("discover_categories", True):
+            return "other"
+    except Exception:
+        pass
+    cats = [c for c in cats if c != "other"] + [key, "other"]
+    save_categories(cats)
+    return key
+
+
+def pretty_label(key: str) -> str:
+    if key in _PRETTY:
+        return _PRETTY[key]
+    return " ".join(w.capitalize() for w in key.split("_")) or "Other"
 
 
 def resolve_category(user_text: str) -> str | None:
-    """Map user input (a category key OR a human label like 'AI Ideas') → key."""
-    if not user_text:
+    """Map user input (a key or a human label) → a category key. A label that
+    doesn't exist yet is REGISTERED (users invent categories by correcting)."""
+    if not user_text or not user_text.strip():
         return None
-    t = user_text.strip().lower()
-    if t in CATEGORIES:
-        return t
-    for key, label in CATEGORY_SHEET.items():
-        if t == label.lower():
-            return key
-    # also tolerate light variants: 'ai idea', 'movies', 'self improvement'
-    squished = t.replace("&", "").replace("-", " ").replace("_", " ")
-    squished = " ".join(squished.split())
-    for key, label in CATEGORY_SHEET.items():
-        norm_label = label.lower().replace("&", "").replace("-", " ")
-        norm_label = " ".join(norm_label.split())
-        if squished in (norm_label, key.replace("_", " ")):
-            return key
-    return None
+    key = normalize_category(user_text)
+    cats = load_categories()
+    if key in cats:
+        return key
+    # match against pretty labels of existing categories
+    for k in cats:
+        if normalize_category(pretty_label(k)) == key:
+            return k
+    # a new category the user is coining via a correction
+    return register_category(user_text)
 
 DEFAULT_CONFIG: dict[str, Any] = {
     "ig_username": "",
     "allowed_sender_usernames": [],
     "allowed_sender_pks": [],
+
+    # Category taxonomy is ADAPTIVE. Leave `categories` empty to let the kit
+    # discover your categories from what you send; or pre-seed your interests
+    # (e.g. ["woodworking","crypto","climbing"]). `discover_categories` lets the
+    # classifier coin new categories when nothing fits (recommended).
+    "categories": [],
+    "discover_categories": True,
     "thread_amount": 10,
     "thread_message_limit": 20,
     "max_frames": 40,

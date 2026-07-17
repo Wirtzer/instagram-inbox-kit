@@ -5,6 +5,10 @@
   "allowed_sender_usernames": ["your_personal_account"],
   "allowed_sender_pks": [],
 
+  "_note_categories": "Your tabs are ADAPTIVE — they grow from what YOU send, not a fixed list. Leave `categories` empty to let it discover yours; or pre-seed your interests (e.g. [\"woodworking\",\"crypto\",\"climbing\"]). `discover_categories` lets the classifier coin a new category when nothing fits (recommended on).",
+  "categories": [],
+  "discover_categories": true,
+
   "thread_amount": 10,
   "thread_message_limit": 20,
 

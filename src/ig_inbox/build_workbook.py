@@ -30,7 +30,7 @@ CORRECT_FILL = PatternFill("solid", fgColor="B45309")  # amber: "edit me"
 TITLE_FONT = Font(bold=True, size=13)
 WRAP = Alignment(wrap_text=True, vertical="top")
 
-CATEGORY_SHEET = config.CATEGORY_SHEET
+# sheet names come from config.pretty_label (any category, incl. coined ones)
 
 
 def _load(captures: Path) -> list[dict]:
@@ -353,7 +353,7 @@ def build(captures_path: Path | None = None, out_path: Path | None = None,
             name = _game_tab(r, known_games) or "Games"
         else:
             coll = (r.get("collection") or "").strip()
-            name = coll or CATEGORY_SHEET.get(r.get("category", "other"), "Other")
+            name = coll or config.pretty_label(r.get("category", "other"))
         if name in ("Books", "Restaurants"):
             continue  # collection literally named Books/Restaurants → the master
         if name not in groups:

@@ -213,8 +213,8 @@ def few_shot_block(path: Path | None = None) -> str:
         if key in seen:
             continue
         seen.add(key)
-        to_label = config.CATEGORY_SHEET.get(to_cat, to_cat)
-        from_label = config.CATEGORY_SHEET.get(c.get("from_category"), c.get("from_category") or "?")
+        to_label = config.pretty_label(to_cat)
+        from_label = config.pretty_label(c.get("from_category") or "?")
         lines.append(f'- A post about "{sig[:80]}" should be {to_label}, not {from_label}.')
         if len(lines) >= MAX_FEWSHOT:
             break
@@ -243,8 +243,8 @@ def compute_metrics(records: list[dict] | None = None,
     by_transition: dict[str, int] = {}
     from_counts: dict[str, int] = {}
     for c in corrections:
-        f = config.CATEGORY_SHEET.get(c.get("from_category"), c.get("from_category") or "?")
-        t = config.CATEGORY_SHEET.get(c.get("to_category"), c.get("to_category") or "?")
+        f = config.pretty_label(c.get("from_category") or "?")
+        t = config.pretty_label(c.get("to_category") or "?")
         by_transition[f"{f} → {t}"] = by_transition.get(f"{f} → {t}", 0) + 1
         from_counts[f] = from_counts.get(f, 0) + 1
 
